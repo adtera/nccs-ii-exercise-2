@@ -14,9 +14,9 @@ args = parser.parse_args()
 
 
 # Calculate Morse Potential
-D_e = 5
-alpha = 2
-r_e = 1
+D_e = 1.6
+alpha = 3.028
+r_e = 1.411
     
 def v_morse(r):
     pot = D_e * (np.exp(-2*alpha*(r-r_e)) -2*np.exp(alpha*(r-r_e)))
@@ -187,8 +187,7 @@ with open('./ratio_distances_within_radii.txt','w') as out_file:
         
 
 # Plot EKin over time and discuss
-M = 100
-kB = constants.k
+kB = 3.167 * 10 **(-6)
 time = []
 ekin_over_time = []
 for t,energy in enumerate(energies):
@@ -201,4 +200,4 @@ plt.plot(ekin_over_time)
 fig.suptitle("Evolution of Kinetic Temperature")
 plt.xlabel("Time/fs")
 plt.ylabel("Ekin/(M*kB*3/2)")
-#plt.show()
+plt.show()
