@@ -3,18 +3,26 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from utils import particle_cloud
-#M = int(input()) # number of particles
-#L = int(input()) # side length of sim box in Angstrom
-#T = int(input()) # temperatute in kelvin
 
-M = 1000
-L = 100
-T = 300
+np.random.seed(800)
 
-
+L = 100 #int(input())
+M = 80 #int(input())
+T = 300 #int(input())
 particles = particle_cloud(M, L, T)
+coords = particles.get_array()
+
+x,y,z = zip(*coords)
+fig = plt.figure(figsize = (15,15))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(x, y, z)
+ax.set_xlim(0,L)
+ax.set_ylim(0,L)
+ax.set_zlim(0,L)
+plt.show()
+
+#%%
 
 x = particles.linspace_axis_1d
 
