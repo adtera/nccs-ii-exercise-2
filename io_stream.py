@@ -109,8 +109,8 @@ def calculate_energies(xyz,side_length):
 # Import trajectory file
 with open(args.pos_arg) as f:
     text = f.readlines()
-# Get number of atoms 
-M = int(text[0][0])
+# Get number of atoms s
+M = int(text[0])
 # Get length of box
 L = float(text[2])
 # Get atom positions and velocitities for every timestep seperately
