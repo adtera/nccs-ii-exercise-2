@@ -60,8 +60,8 @@ class particle_cloud:
     
         
 def E_potential(position, M = 10):
-    position = position.reshape(M, 3)
-
+#    position = position.reshape((M, 3))
+    position = np.reshape(position,(M,3))
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
