@@ -107,6 +107,7 @@ def Out(position,velocity):
 
 # Clear output txt file
 file = open("trajectory.txt","w")
+file.write(str(N_of_Atoms) + "\n" + "Task3 output" + "\n" + str(side_length)+ "\n")
 file.close()
 
 # First step
