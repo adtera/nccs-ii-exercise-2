@@ -121,7 +121,7 @@ for i in range(0,N):
     # Write some outputs into txt file                                                                  #to be adapted for bigger N
     if i%2 == 0:
         file = open("trajectory.txt", "a")
-        content = str(N_of_Atoms) + "\n" + "Iteration Number: " + str(i) + "\n" + str(side_length) + "\n" + Out(newcoordinates,newvelocity)
+        content = Out(newcoordinates,newvelocity)
         file.write(content)
         
 
