@@ -77,10 +77,11 @@ def E_potential(position, M = 10):
 # Acceleration
 def acceleration(position, M = 10):
     morse_gradient = jax.jit(jax.grad(E_potential))
-    forces = - morse_gradient(position)
+    forces = morse_gradient(position)
+#    forces = forces *(-1)
     #accel = forces/m
     #return accel
-    return np.array(forces).reshape(3*M,)
+    return np.array(forces).flatten()
 
 # Velocity
 def new_velocity(acceleration, acceleration_old,time_step, velocity_old):

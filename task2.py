@@ -15,10 +15,11 @@ M = (10,) #int(input())
 T = 300 #int(input())
 particles = particle_cloud(M[0], L, T)
 coords = particles.get_array()
-coordinates = npj.array(coords)#
+#coordinates = npj.array(coords)#
+coordinates = np.array(coords).flatten()
 
 options = {
-    'gtol': 1e-30,
+    'gtol': 1e-9,
     'disp': True,
     'return_all': True
     }
@@ -28,19 +29,20 @@ e_pot_gradient = jax.jit(jax.grad(E_potential))
 #%%
 res = minimize(
     E_potential,
-    coords,
+    coordinates,
     args = M,
     method = "CG",
-    jac = e_pot_gradient,
+    jac = acceleration,
 #    jac = acceleration,
-    options = options)
+    options = options
+    )
 
 new_coords = np.array(res.x).reshape(M[0], 3)
 #%%
-res
+print(res)
 #%%
-print(coords)
-print(new_coords)
+print(E_potential(coords))
+print(E_potential(new_coords))
 #print(np.array(new_coords))
 
 #%%
