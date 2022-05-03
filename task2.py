@@ -3,34 +3,93 @@ import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utils import particle_cloud, E_potential, acceleration
-
+from utils import particle_cloud
+# E_potential, acceleration
+import scipy
 import jax
 import jax.numpy as npj
 import argparse
 
+def E_potential(position):
+#    position = position.reshape((M, 3))
+    position = np.reshape(position,(M[0],3))
+    delta = position[:, npj.newaxis, :] - position
+    indices = npj.triu_indices(position.shape[0], k=1)
+    delta = delta[indices[0], indices[1], :]
+    r2 = (delta * delta).sum(axis=1)
+    r = npj.sqrt(r2)
+    D_e = 1.6
+    Alpha = 3.028
+    r_e = 1.411
+    V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
+    E_pot = sum(V_Morse)
+    return E_pot
+
+# Acceleration
+def acceleration(position):
+    morse_gradient = jax.jit(jax.grad(E_potential))
+    forces = morse_gradient(position)
+    #accel = forces/m
+    #return accel
+    return np.array(forces)
+
+def out_string(position,velocity):
+    output = np.empty([len(position), 6])
+    trjct = ""
+    for i in range(len(position)):
+        for j in range(0,3) :
+            output[i,j] = position[i,j]
+            output[i,j+3] = velocity[i,j]
+    for line in output:
+        for elem in line:
+            trjct += str(elem) + " "
+        trjct += "\n"
+    return trjct
+
+def save_to_file(position,velocity):
+
+    with open("input.txt","w") as file:
+        file.write(str(M[0]) + '\n')
+        file.write("-" + '\n')
+        file.write(str(L) + '\n')
+        file.write(out_string(position,velocity))       
+        
 np.random.seed(800)
-L = 3 #int(input())
-M = (10,) #int(input())
+L = 2 #int(input())
+M = (15,) #int(input())
 T = 300 #int(input())
 particles = particle_cloud(M[0], L, T)
 coords = particles.get_array()
+
+#k = scipy.constants.physical_constants["Boltzmann constant in eV/K"][0]
+k = 3.166811429 * (10 ** -6)
+varr = np.sqrt((k*T)/18.998403)
+
+mu = np.array([0.0, 0.0, 0.0])
+
+sigma = np.array([varr, varr, varr])
+covariance = np.diag(sigma**2)
+
+vels = np.random.multivariate_normal(mean= mu, cov=covariance, size=(M[0],1))
+#vels = vels.reshape(np.array(coords).shape)
+velssss = vels - vels.mean(axis=0, keepdims=True)
+
+#print([ sum(row[i] for row in vels) for i in range(len(vels[0])) ])
+#print([ sum(row[i] for row in velssss) for i in range(len(velssss[0])) ])
+
+velssss = np.array(velssss)
+
 #coordinates = npj.array(coords)#
 coordinates = np.array(coords).flatten()
 
 options = {
-    'gtol': 1e-9,
+    'gtol': 1e-7,
     'disp': True,
     'return_all': True
     }
-
-
-e_pot_gradient = jax.jit(jax.grad(E_potential))
-#%%
 res = minimize(
     E_potential,
     coordinates,
-    args = M,
     method = "CG",
     jac = acceleration,
 #    jac = acceleration,
@@ -38,6 +97,12 @@ res = minimize(
     )
 
 new_coords = np.array(res.x).reshape(M[0], 3)
+
+vel_output = np.array([vel for [vel] in velssss])
+
+save_to_file(new_coords, vel_output)
+#%%
+print("DONE")
 #%%
 print(res)
 #%%
@@ -67,67 +132,3 @@ plt.show()
 
 #%%
 
-x = particles.linspace_axis_1d
-
-fig = plt.figure(figsize = (15,15))
-
-ax = fig.add_subplot(111)
-ax.scatter(x, x)
-ax.set_xlim(0,L)
-ax.set_ylim(0,L)
-plt.show()
-
-
-#%%
-pos = np.random.random((M, 3))
-
-
-
-#%%
-
-
-theta = np.random.random(M) * 2 * np.pi
-pos_true = L * pos
-
-E_pot 
-#%%
-print(pos_true)
-# %%
-fig = plt.figure(figsize = (15,15))
-
-ax = fig.add_subplot(111, projection='3d')
-x,y,z = zip(*pos_true)
-ax.scatter(x, y, z)
-ax.set_xlim(0,L)
-ax.set_ylim(0,L)
-ax.set_zlim(0,L)
-plt.show()
-
-#%%
-for particle in range(M):
-    pass
-
-   
-def v_morse(r):
-    D_e = 5
-    alpha = 2
-    r_e = 1
-
-    pot = D_e * (np.exp(-2*alpha*(r-r_e)) -2*np.exp(alpha*(r-r_e)))
-    return pot
-
-trajectories = np.random.rand(10,6)
-trajectories
-
-positions = trajectories[:,:3]
-velocities = trajectories[:,3:]
-deltas = positions[:,np.newaxis]- positions
-indices = np.triu_indices(positions.shape[0], k=1)
-deltas = deltas[indices[0], indices[1], :]
-deltas
-distances = np.sqrt((deltas*deltas).sum(axis=1))
-#len(distances)
-E_pot = 0
-for d in distances:
-    E_pot += v_morse(d) 
-E_pot
