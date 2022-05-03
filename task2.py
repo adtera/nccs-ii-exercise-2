@@ -19,21 +19,20 @@ coordinates = npj.array(coords)#
 
 options = {
     'gtol': 1e-30,
-    'norm': np.inf,
-    'eps': 1.4901161193847656e-08,
-    'maxiter': 20,
     'disp': True,
-    'return_all': True,
-    'finite_diff_rel_step': None}
+    'return_all': True
+    }
 
 
+e_pot_gradient = jax.jit(jax.grad(E_potential))
 #%%
 res = minimize(
     E_potential,
     coords,
     args = M,
     method = "CG",
-    jac = acceleration,
+    jac = e_pot_gradient,
+#    jac = acceleration,
     options = options)
 
 new_coords = np.array(res.x).reshape(M[0], 3)
@@ -105,8 +104,6 @@ plt.show()
 #%%
 for particle in range(M):
     pass
-
-
 
    
 def v_morse(r):

@@ -61,8 +61,7 @@ class particle_cloud:
         
 def E_potential(position, M = 10):
     position = position.reshape(M, 3)
-    print(f"""{20*'#'}epot-pos{20*'#'}
-        {position}""")
+
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
@@ -77,11 +76,8 @@ def E_potential(position, M = 10):
 
 # Acceleration
 def acceleration(position, M = 10):
-    position = position.reshape(M, 3)
-    print(f"""{20*'#'}acc-pos{20*'#'}
-        {position}""")
     morse_gradient = jax.jit(jax.grad(E_potential))
-    forces = - morse_gradient(position)
+    forces = morse_gradient(position)
     #accel = forces/m
     #return accel
     return np.array(forces).reshape(3*M,)
