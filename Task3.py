@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#%%
 import numpy as np
 import jax
 import jax.numpy as npj
@@ -38,12 +38,14 @@ with open(args.input) as f:
 coordinates = npj.array(init_coord)
 velocities = npj.array(init_vel)
 
+print(coordinates)
 ##########################################################################################
-        
+#%%      
 ##Define functions
 
 # Morse potential
 def E_potential(position):
+    print(position)
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
