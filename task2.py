@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from utils import particle_cloud, save_to_file, BC
+from utils import particle_cloud, save_to_file, BC, plot_3d
 import argparse
 import jax
 import jax.numpy as npj
@@ -15,7 +15,6 @@ def E_potential(position):
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
     delta = delta - L * npj.round(delta/L)
-    print(delta)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
     D_e = 0.0587989 #in 0.0587989 E_H = 1.6 eV
@@ -33,10 +32,10 @@ def parse_arguments():
     parser.add_argument("temperature", help="temperature in kelvin")
     return parser.parse_args()
 
-np.random.seed(800)
+# np.random.seed(800)
 
-# args = parse_arguments()
-args = False
+args = parse_arguments()
+#args = False
 
 if args:
     L = float(args.length)
@@ -48,16 +47,12 @@ else:
     T = 300 #int(input())
 
 config = (L,M)
-print(f"values: L = {L}, M = {M}, T = {T}")
 
 particles = particle_cloud(L, M, T)
 position = particles.get_array().flatten()
 
-print(E_potential(position))
+print(f"values: L = {L}, M = {M}, T = {T}, E_pot = {E_potential(position)}")
 #%%
-#k = scipy.constants.physical_constants["Boltzmann constant in eV/K"][0]
-#coordinates = npj.array(coords)#
-
 options = {
     'gtol': 1.19e-7,
     'disp': True,
@@ -69,7 +64,6 @@ options = {
 print('=== START SCIPY.OPTIMIZE.MINIMIZE')
 
 energy_gradient = jax.jit(jax.grad(E_potential))
-
 res = minimize(
     E_potential,
     position,
@@ -83,6 +77,7 @@ print('=== EXIT SCIPY.OPTIMIZE.MINIMIZE')
 pos_input = np.array(res.x).reshape(M, 3)
 
 ##### velocity, subscript H denotes Hartree
+#k = scipy.constants.physical_constants["Boltzmann constant in eV/K"][0]
 k = 3.166811429 * (10 ** -6) # in E_H * K^{-1}
 varr = np.sqrt((k*T)/18.998403) # v_H
 mu = np.array([0.0, 0.0, 0.0])
@@ -90,7 +85,6 @@ sigma = np.array([varr, varr, varr])
 covariance = np.diag(sigma**2)
 
 vels = np.random.multivariate_normal(mean= mu, cov=covariance, size=(M,1))
-#vels = vels.reshape(np.array(coords).shape)
 vels_0 = vels - vels.mean(axis=0, keepdims=True)
 
 #print([ sum(row[i] for row in vels) for i in range(len(vels[0])) ])
@@ -99,41 +93,17 @@ vels_0 = vels - vels.mean(axis=0, keepdims=True)
 vels_0 = np.array(vels_0)
 vel_input = np.array([vel for [vel] in vels_0])
 
-
 print('start writing input.txt')
 save_to_file(BC(pos_input,L), vel_input, M, L)
 print("DONE")
 #%%
-
-
-print(pos_input)
-print(vel_input)
+# print(pos_input)
+# print(vel_input)
+# print(res)
+# print(E_potential(position))
+# print(E_potential(pos_input))
 #%%
-print(res)
-#%%
-print(E_potential(position))
-print(E_potential(pos_input))
-#print(np.array(new_coords))
-
-#%%
-x,y,z = zip(*particles.get_array())
-fig = plt.figure(figsize = (15,15))
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(x, y, z)
-ax.set_xlim(0,L)
-ax.set_ylim(0,L)
-ax.set_zlim(0,L)
-plt.show()
-
-#%%
-x,y,z = zip(*BC(pos_input,L).tolist())
-fig = plt.figure(figsize = (15,15))
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(x, y, z)
-ax.set_xlim(0,L)
-ax.set_ylim(0,L)
-ax.set_zlim(0,L)
-plt.show()
-
-#%%
+# plot_3d(particles.get_array(), L)
+# plot_3d(pos_input.tolist(), L)
+plot_3d(BC(pos_input,L).tolist(), L)
 
