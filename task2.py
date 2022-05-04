@@ -11,6 +11,7 @@ import jax.numpy as npj
 print('defining functions')
 
 def E_potential(position):
+    print('executing e_pot')
     position = np.reshape(position,(M,3))
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
@@ -31,6 +32,7 @@ def energy_gradient2(position):
 
 
 def energy_gradient(position):
+    print('executing energy_gradient')
     morse_gradient = jax.jit(jax.grad(E_potential))
     forces = morse_gradient(position)
     return np.array(forces)
