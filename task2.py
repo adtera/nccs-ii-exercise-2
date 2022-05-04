@@ -9,7 +9,7 @@ import jax.numpy as npj
 
 
 print('=== DEFINING FUNCTIONS')
-
+count = 0
 def E_potential(position):
     print('--- Start function: E_potential')
     position = np.reshape(position,(M,3))    
@@ -30,6 +30,8 @@ def E_potential(position):
     ##
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
     E_pot = sum(V_Morse)
+    count += 1
+    print(f'iter: {count}')
     print('--- Exit function: E_potential')
     return E_pot
 
