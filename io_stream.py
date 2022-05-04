@@ -14,7 +14,8 @@ args = parser.parse_args()
 
 
 # Calculate Morse Potential
-D_e = 1.6
+#D_e = 1.6
+D_e = 0.0587989 #in 0.0587989 E_H = 1.6 eV
 alpha = 3.028
 r_e = 1.411
     
@@ -48,7 +49,8 @@ def calc_Epot(configuration):
 
 # Calculate Kinetic Energy
 def calc_Ekin(configuration):
-    m_e = 0.2
+    #m_e = 0.2
+    m_e = 18.998403 #debug ?
     velocities = configuration[:,3:]
     velocities_split = np.array_split(velocities,M)
     E_kin = 0
@@ -108,6 +110,7 @@ def calculate_energies(xyz,side_length):
     return energies
 
 
+
 # Import trajectory file
 with open(args.pos_arg) as f:
     text = f.readlines()
@@ -120,10 +123,12 @@ configuration = slice_at_nth(text[3:],M)
 # Calculate Energies
 energies = calculate_energies(configuration,L)
 
+
 with open('./energies.txt','w') as out_file:
     out_file.write("  ".join(["Epot","EKin"])+"\n")
     for line in energies:
         out_file.write("   ".join([str(line[0]),str(line[1])])+'\n')
+#        out_file.write("   ".join([str(line[0]),str(line[1]), str(float(line[0]) + float(line[1]))])+'\n') # debug
 
 
 # Define function calculating atomic distances bigger than threshold radius and weigh over time 
@@ -192,9 +197,15 @@ with open('./ratio_distances_within_radii.txt','w') as out_file:
 kB = 3.167 * 10 **(-6)
 time = []
 ekin_over_time = []
+epot_over_time = []
+e_total = []
 for t,energy in enumerate(energies):
-    ekin = energy[1]
+    print(energy)
+    ekin = float(energy[1])
+    epot = float(energy[0])
     ekin_over_time.append(ekin/(M*kB*3/2))
+    epot_over_time.append(epot)
+    e_total.append(ekin + epot)
     time.append(t)
 ekin_over_time
 fig = plt.figure()
@@ -202,4 +213,20 @@ plt.plot(ekin_over_time)
 fig.suptitle("Evolution of Kinetic Temperature")
 plt.xlabel("Time/fs")
 plt.ylabel("Ekin/(M*kB*3/2)")
+plt.show()
+
+
+fig = plt.figure()
+plt.plot(epot_over_time)
+fig.suptitle("Evolution of Potential Energy")
+plt.xlabel("Time/fs")
+plt.ylabel("Epot")
+plt.show()
+
+
+fig = plt.figure()
+plt.plot(e_total)
+fig.suptitle("Evolution of Total Energy")
+plt.xlabel("Time/fs")
+plt.ylabel("E_total")
 plt.show()

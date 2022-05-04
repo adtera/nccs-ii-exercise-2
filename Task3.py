@@ -17,8 +17,8 @@ args = parser.parse_args()
 
 # Given values
 m = 18.998403 #atomic mass units
+delta_t = float(args.timestep) #Time step length in 'atomic time units' or 0.0241885 fs
 N = int(args.steps) #Number of time steps
-delta_t = float(args.timestep) #Time step length
 
 ## Read input file
 
@@ -38,21 +38,20 @@ with open(args.input) as f:
 coordinates = npj.array(init_coord)
 velocities = npj.array(init_vel)
 
-print(coordinates)
+#print(coordinates)
 ##########################################################################################
-#%%      
 ##Define functions
 
 # Morse potential
 def E_potential(position):
-    print(position)
+    # print(position)
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
     delta = delta - side_length * npj.round(delta/side_length)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
-    D_e = 1.6
+    D_e = 0.0587989 #in 0.0587989 E_H = 1.6 eV
     Alpha = 3.028
     r_e = 1.411
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
@@ -68,12 +67,12 @@ def acceleration (position):
 
 # Velocity
 def new_velocity(acceleration, acceleration_old,time_step, velocity_old):
-    velocity = velocities + acceleration_old + (acceleration_old+acceleration)/2*delta_t
+    velocity = velocity_old + ((acceleration_old+acceleration)/2)*time_step
     return velocity
 
 # Position
 def new_positions(acceleration, velocity, time_step, position):
-    new_position = position + velocity * time_step + 1/2*acceleration*time_step*time_step
+    new_position = position + velocity * time_step + (1/2)*acceleration*time_step*time_step
     return new_position
 
 # Periodic boundary conditions
@@ -114,12 +113,13 @@ file.write(str(N_of_Atoms) + "\n" + "Task3 output" + "\n" + str(side_length)+ "\
 file.close()
 
 # First step
-oldacceleration = acceleration (coordinates)                                                            #needed only for the first step
+oldacceleration = acceleration(coordinates)                                                            #needed only for the first step
 
 #Loop over steps
-for i in range(0,N):    
+for i in range(0,N):  
+    print(f'TIMESTEP: {i}')  
     newcoordinates = BC(new_positions(oldacceleration,velocities,delta_t,coordinates))
-    newacceleration = acceleration (newcoordinates)
+    newacceleration = acceleration(newcoordinates)
     newvelocity = new_velocity(newacceleration, oldacceleration,delta_t, velocities)
 
     # Write some outputs into txt file                                                                  #to be adapted for bigger N

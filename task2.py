@@ -18,7 +18,7 @@ def E_potential(position):
     print(delta)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
-    D_e = 1.6
+    D_e = 0.0587989 #in 0.0587989 E_H = 1.6 eV
     Alpha = 3.028
     r_e = 1.411
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
@@ -43,7 +43,7 @@ if args:
     M = int(args.number)
     T = float(args.temperature)
 else:
-    L = 2 #int(input())
+    L = 7 #int(input())
     M = 100 #int(input())
     T = 300 #int(input())
 
@@ -82,9 +82,9 @@ print('=== EXIT SCIPY.OPTIMIZE.MINIMIZE')
 
 pos_input = np.array(res.x).reshape(M, 3)
 
-##### velocity
-k = 3.166811429 * (10 ** -6)
-varr = np.sqrt((k*T)/18.998403)
+##### velocity, subscript H denotes Hartree
+k = 3.166811429 * (10 ** -6) # in E_H * K^{-1}
+varr = np.sqrt((k*T)/18.998403) # v_H
 mu = np.array([0.0, 0.0, 0.0])
 sigma = np.array([varr, varr, varr])
 covariance = np.diag(sigma**2)
