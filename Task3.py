@@ -59,19 +59,19 @@ def E_potential(position):
     return E_pot
 
 # Acceleration
-def acceleration (position):
+def get_acceleration (position):
     morse_gradient = jax.jit(jax.grad(E_potential))
     forces = - morse_gradient(position)
     accel = forces/m
     return accel
 
 # Velocity
-def new_velocity(acceleration, acceleration_old,time_step, velocity_old):
+def get_velocity(acceleration, acceleration_old,time_step, velocity_old):
     velocity = velocity_old + ((acceleration_old+acceleration)/2)*time_step
     return velocity
 
 # Position
-def new_positions(acceleration, velocity, time_step, position):
+def get_positions(acceleration, velocity, time_step, position):
     new_position = position + velocity * time_step + (1/2)*acceleration*time_step*time_step
     return new_position
 
@@ -113,25 +113,30 @@ file.write(str(N_of_Atoms) + "\n" + "Task3 output" + "\n" + str(side_length)+ "\
 file.close()
 
 # First step
-oldacceleration = acceleration(coordinates)                                                            #needed only for the first step
+acceleration = get_acceleration(coordinates)                                                            #needed only for the first step
+
+get_positions_jit = jax.jit(get_positions)
+get_acceleration_jit = jax.jit(get_acceleration)
+get_velocity_jit = jax.jit(get_velocity)
 
 #Loop over steps
 for i in range(0,N):  
-    print(f'TIMESTEP: {i}')  
-    newcoordinates = BC(new_positions(oldacceleration,velocities,delta_t,coordinates))
-    newacceleration = acceleration(newcoordinates)
-    newvelocity = new_velocity(newacceleration, oldacceleration,delta_t, velocities)
+    print(f'TIMESTEP: {i}')
+    new_coordinates = BC(get_positions_jit(acceleration,velocities,delta_t,coordinates))
+#    new_coordinates = get_positions(acceleration,velocities,delta_t,coordinates)
+    new_acceleration = get_acceleration_jit(new_coordinates)
+    new_velocity = get_velocity_jit(new_acceleration, acceleration,delta_t, velocities)
 
     # Write some outputs into txt file                                                                  #to be adapted for bigger N
     if i%2 == 0:
         file = open("trajectory.txt", "a")
-        content = Out(newcoordinates,newvelocity)
+        content = Out(new_coordinates,new_velocity)
         file.write(content)
         
 
-    coordinates = newcoordinates
-    velocities = newvelocity
-    oldacceleration = newacceleration
+    coordinates = new_coordinates
+    velocities = new_velocity
+    acceleration = new_acceleration
 
     # Close output txt file
     file.close()

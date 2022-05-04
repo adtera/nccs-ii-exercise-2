@@ -82,10 +82,12 @@ def calculate_energies(xyz,side_length):
             for j in range(0,3) :
                 if position[i,j] > side_length:
                     mod = position[i,j] // side_length
-                    position = position.at[i,j].add(-mod * side_length)
+                    #position = position.at[i,j].add(-mod * side_length)
+                    np.add.at(position,[i,j],-mod * side_length)
                 if position[i,j] < 0:
                     mod = 1 + (abs(position[i,j]) // side_length)
-                    position = position.at[i,j].add(mod * side_length)
+                    #position = position.at[i,j].add(mod * side_length)
+                    np.add.at(position,[i,j],mod * side_length)
                 else:
                     pass
         return position
@@ -121,6 +123,7 @@ M = int(text[0])
 L = float(text[2])
 # Get atom positions and velocitities for every timestep seperately
 configuration = slice_at_nth(text[3:],M)
+
 # Calculate Energies
 energies = calculate_energies(configuration,L)
 
@@ -140,10 +143,12 @@ def calculate_distances_within_treshold_radius(configurations,r,side_length):
             for j in range(0,3) :
                 if position[i,j] > side_length:
                     mod = position[i,j] // side_length
-                    position = position.at[i,j].add(-mod * side_length)
+                    #position = position.at[i,j].add(-mod * side_length)
+                    np.add.at(position,[i,j],-mod * side_length)
                 if position[i,j] < 0:
                     mod = 1 + (abs(position[i,j]) // side_length)
-                    position = position.at[i,j].add(mod * side_length)
+                    #position = position.at[i,j].add(mod * side_length)
+                    np.add.at(position,[i,j],mod * side_length)
                 else:
                     pass
         return position
