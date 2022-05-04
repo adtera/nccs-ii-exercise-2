@@ -61,12 +61,11 @@ coords = particles.get_array()
 coordinates = np.array(coords).flatten()
 
 options = {
-    'gtol': 1e-7,
+    'gtol': 1e-5,
     'disp': True,
     'maxiter': 3,
     'return_all': True
     }
-print(config)
 
 res = minimize(
     E_potential,
