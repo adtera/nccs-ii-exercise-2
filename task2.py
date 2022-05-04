@@ -42,7 +42,7 @@ if args:
     M = int(args.number)
     T = float(args.temperature)
 else:
-    L = 15 #int(input())
+    L = 2 #int(input())
     M = 100 #int(input())
     T = 300 #int(input())
 
