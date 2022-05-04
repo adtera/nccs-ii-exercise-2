@@ -49,6 +49,7 @@ def E_potential(position):
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
+    delta = delta - side_length * npj.round(delta/side_length)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
     D_e = 1.6

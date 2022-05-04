@@ -15,6 +15,7 @@ def E_potential(position):
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
     delta = delta - L * npj.round(delta/L)
+    print(delta)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
     D_e = 1.6
@@ -52,6 +53,8 @@ print(f"values: L = {L}, M = {M}, T = {T}")
 particles = particle_cloud(L, M, T)
 position = particles.get_array().flatten()
 
+print(E_potential(position))
+#%%
 #k = scipy.constants.physical_constants["Boltzmann constant in eV/K"][0]
 #coordinates = npj.array(coords)#
 
