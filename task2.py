@@ -13,12 +13,16 @@ print('defining functions')
 def E_potential(position):
     print('executing e_pot')
     position = np.reshape(position,(M,3))
+    
+    print('executing delta')
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
-    delta = delta - L * npj.round(delta/L)
+ #   delta = delta - L * npj.round(delta/L)
+    print('executing r')
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
+    print(r)
     D_e = 1.6
     Alpha = 3.028
     r_e = 1.411
@@ -35,6 +39,7 @@ def energy_gradient(position):
     print('executing energy_gradient')
     morse_gradient = jax.jit(jax.grad(E_potential))
     forces = morse_gradient(position)
+    print(forces)
     return np.array(forces)
 
 ## Input arguments
