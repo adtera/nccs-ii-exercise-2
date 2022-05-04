@@ -20,7 +20,8 @@ alpha = 3.028
 r_e = 1.411
     
 def v_morse(r):
-    pot = D_e * (np.exp(-2*alpha*(r-r_e)) -2*np.exp(alpha*(r-r_e)))
+#    pot = D_e * (np.exp(-2*alpha*(r-r_e)) -2*np.exp(alpha*(r-r_e)))
+    pot = D_e * (np.exp(-2*alpha*(r-r_e)) -2*np.exp(-alpha*(r-r_e)))
     return pot
 
 ## Function definitions

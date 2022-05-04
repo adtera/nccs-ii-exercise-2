@@ -32,7 +32,7 @@ def parse_arguments():
     parser.add_argument("temperature", help="temperature in kelvin")
     return parser.parse_args()
 
-# np.random.seed(800)
+np.random.seed(800)
 
 args = parse_arguments()
 #args = False
