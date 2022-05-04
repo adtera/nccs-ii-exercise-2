@@ -30,7 +30,7 @@ def calc_distances(configuration):
     deltas = positions[:,np.newaxis]- positions
     indices = np.triu_indices(positions.shape[0], k=1)
     deltas = deltas[indices[0], indices[1], :]
-    deltas
+    deltas = deltas - L * np.round(deltas/L)
     distances = np.sqrt((deltas*deltas).sum(axis=1))
     
     return distances
