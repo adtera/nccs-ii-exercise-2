@@ -23,9 +23,8 @@ def E_potential(position):
     r_e = 1.411
     print('calculating V_Morse')
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
-    E_pot = sum(V_Morse)
-    count[0] += 1
-    print(f'iter: {count}')
+    E_pot = V_Morse.sum()
+    #E_pot = sum(V_Morse)
     print('--- Exit function: E_potential')
     return E_pot
 
@@ -50,8 +49,6 @@ else:
     L = 15 #int(input())
     M = 1000 #int(input())
     T = 300 #int(input())
-
-count = [0]
 
 config = (L,M)
 print(f"values: L = {L}, M = {M}, T = {T}")
