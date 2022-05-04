@@ -8,17 +8,15 @@ import jax
 import jax.numpy as npj
 
 
-print('defining functions')
-
+print('=== DEFINING FUNCTIONS')
+count = 0
 def E_potential(position):
-    print('executing e_pot')
+    print('--- Start function: E_potential')
     position = np.reshape(position,(M,3))    
-    print('executing delta')
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
     delta = delta - L * npj.round(delta/L)
-    print('executing r')
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
     D_e = 1.6
@@ -32,7 +30,9 @@ def E_potential(position):
     ##
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
     E_pot = sum(V_Morse)
-    print('returning E_pot')
+    count += 1
+    print(f'iter: {count}')
+    print('--- Exit function: E_potential')
     return E_pot
 
 def energy_gradient2(position):
@@ -41,8 +41,9 @@ def energy_gradient2(position):
 
 
 def energy_gradient(position):
-    print('calculating energy_gradient')
+    print('--- Start function: energy_gradient')
     morse_gradient = jax.jit(jax.grad(E_potential))
+    print('--- Exit function: energy_gradient')
     return morse_gradient(position)
     
 ## Input arguments
@@ -69,74 +70,65 @@ else:
 
 
 config = (L,M)
-
 print(f"values: L = {L}, M = {M}, T = {T}")
 
 particles = particle_cloud(L, M, T)
-coords = particles.get_array()
+position = particles.get_array().flatten()
 
 #k = scipy.constants.physical_constants["Boltzmann constant in eV/K"][0]
 #coordinates = npj.array(coords)#
-coordinates = np.array(coords).flatten()
 
 options = {
-    'gtol': 1e-4,
+    'gtol': 1e-2,
     'disp': True,
-    'maxiter': 3,
+#    'maxiter': 3,
     'return_all': True
     }
 
-print('start minimizing')
+print('=== START SCIPY.OPTIMIZE.MINIMIZE')
 res = minimize(
     E_potential,
-    coordinates,
+    position,
 #    args = config,
     method = "CG",
     jac = energy_gradient,
     options = options
     )
+print('=== EXIT SCIPY.OPTIMIZE.MINIMIZE')
+
 
 pos_input = np.array(res.x).reshape(M[0], 3)
 
 ##### velocity
 k = 3.166811429 * (10 ** -6)
 varr = np.sqrt((k*T)/18.998403)
-
 mu = np.array([0.0, 0.0, 0.0])
-
 sigma = np.array([varr, varr, varr])
 covariance = np.diag(sigma**2)
 
 vels = np.random.multivariate_normal(mean= mu, cov=covariance, size=(M[0],1))
 #vels = vels.reshape(np.array(coords).shape)
-velssss = vels - vels.mean(axis=0, keepdims=True)
+vels_0 = vels - vels.mean(axis=0, keepdims=True)
 
 #print([ sum(row[i] for row in vels) for i in range(len(vels[0])) ])
 #print([ sum(row[i] for row in velssss) for i in range(len(velssss[0])) ])
 
-velssss = np.array(velssss)
-vel_input = np.array([vel for [vel] in velssss])
+vels_0 = np.array(vels_0)
+vel_input = np.array([vel for [vel] in vels_0])
 
 print('start writing input.txt')
 save_to_file(pos_input, vel_input)
-
-
-
-#%%
 print("DONE")
-
-
-
-
 #%%
 
-print(new_coords)
-print(vel_output)
+
+print(pos_input)
+print(vel_input)
 #%%
 print(res)
 #%%
 print(E_potential(coords))
-print(E_potential(new_coords))
+print(E_potential(vel_input))
 #print(np.array(new_coords))
 
 #%%
