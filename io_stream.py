@@ -30,15 +30,17 @@ def calc_distances(configuration):
     deltas = positions[:,np.newaxis]- positions
     indices = np.triu_indices(positions.shape[0], k=1)
     deltas = deltas[indices[0], indices[1], :]
-    deltas = deltas - L * np.round(deltas/L)
+    deltas = deltas - L * np.round(deltas/L) #armin
     distances = np.sqrt((deltas*deltas).sum(axis=1))
-    
     return distances
 
 # Calculate Potential Energy Function
 def calc_Epot(configuration):
     distances = calc_distances(configuration)
     #len(distances)
+
+    # might be faster: E_pot = v_morse(distances).sum()
+
     E_pot = 0
     for d in distances:
         E_pot += v_morse(d)
