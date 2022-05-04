@@ -81,6 +81,19 @@ def energy_gradient(position):
     print('--- Exit function: energy_gradient')
     return morse_gradient(position)
 
+def BC(position, side_length):
+    position = npj.array(position)
+    for i in range(len(position)):
+        for j in range(0,3) :
+            if position[i,j] > side_length:
+                mod = position[i,j] // side_length
+                position = position.at[i,j].add(-mod * side_length)
+            if position[i,j] < 0:
+                mod = 1 + (abs(position[i,j]) // side_length)
+                position = position.at[i,j].add(mod * side_length)
+            else:
+                pass
+    return position
 
 def out_string(position,velocity):
     output = np.empty([len(position), 6])
@@ -95,9 +108,9 @@ def out_string(position,velocity):
         trjct += "\n"
     return trjct
 
-def save_to_file(position,velocity):
+def save_to_file(position,velocity, M, L):
     with open("input.txt","w") as file:
-        file.write(str(M[0]) + '\n')
+        file.write(str(M) + '\n')
         file.write("-" + '\n')
         file.write(str(L) + '\n')
         file.write(out_string(position,velocity))     
