@@ -45,7 +45,7 @@ class particle_cloud:
                 shift_border = self._particle_box_length * 0.3
                 shift = np.random.uniform((-1)*shift_border, shift_border) # A single value
                 arr[i][j] += shift
-        return arr    
+        return np.array(arr)
 
 
 def E_potential(position, *args):
