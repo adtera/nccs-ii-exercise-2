@@ -7,7 +7,8 @@ import argparse
 import jax
 import jax.numpy as npj
 
-  
+
+print('defining functions')
 
 def E_potential(position):
     position = np.reshape(position,(M,3))
@@ -22,7 +23,12 @@ def E_potential(position):
     r_e = 1.411
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
     E_pot = sum(V_Morse)
+    print(f"E_pot is {E_pot}")
     return E_pot
+
+def energy_gradient2(position):
+    return jax.jit(jax.grad(E_potential))
+
 
 def energy_gradient(position):
     morse_gradient = jax.jit(jax.grad(E_potential))
@@ -38,10 +44,9 @@ def parse_arguments():
     return parser.parse_args()
 
 np.random.seed(800)
-try:
-    args = parse_arguments()
-except:
-    args = False
+
+# args = parse_arguments()
+args = False
 
 if args:
     L = float(args.length)
@@ -52,7 +57,11 @@ else:
     M = 1000 #int(input())
     T = 300 #int(input())
 
+
 config = (L,M)
+
+print(f"values: L = {L}, M = {M}, T = {T}")
+
 particles = particle_cloud(L, M, T)
 coords = particles.get_array()
 
@@ -61,12 +70,13 @@ coords = particles.get_array()
 coordinates = np.array(coords).flatten()
 
 options = {
-    'gtol': 1e-5,
+    'gtol': 1e-4,
     'disp': True,
     'maxiter': 3,
     'return_all': True
     }
 
+print('start minimizing')
 res = minimize(
     E_potential,
     coordinates,
@@ -99,7 +109,7 @@ velssss = np.array(velssss)
 
 vel_input = np.array([vel for [vel] in velssss])
 
-
+print('start writing input.txt')
 save_to_file(pos_input, vel_input)
 
 
