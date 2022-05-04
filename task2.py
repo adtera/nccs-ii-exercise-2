@@ -2,66 +2,103 @@
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-import seaborn as sns
-from utils import particle_cloud
-# E_potential, acceleration
-import scipy
+from utils import particle_cloud, save_to_file
+import argparse
 import jax
 import jax.numpy as npj
-import argparse
+
+
+print('defining functions')
 
 def E_potential(position):
-#    position = position.reshape((M, 3))
-    position = np.reshape(position,(M[0],3))
+    print('executing e_pot')
+    position = np.reshape(position,(M,3))    
+    print('executing delta')
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
+    delta = delta - L * npj.round(delta/L)
+    print('executing r')
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
     D_e = 1.6
     Alpha = 3.028
     r_e = 1.411
+    print('calculating V_Morse')
+    ##
+#    E_pot = 0
+#    for _r in r:
+#        E_pot += D_e * (npj.exp(-2*Alpha*(_r-r_e))-2*npj.exp(-Alpha*(_r-r_e)))
+    ##
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
     E_pot = sum(V_Morse)
+    print('returning E_pot')
     return E_pot
 
-# Acceleration
-def acceleration(position):
+def energy_gradient2(position):
+    print(position)
+    return jax.jit(jax.grad(E_potential))
+
+
+def energy_gradient(position):
+    print('calculating energy_gradient')
     morse_gradient = jax.jit(jax.grad(E_potential))
-    forces = morse_gradient(position)
-    #accel = forces/m
-    #return accel
-    return np.array(forces)
+    return morse_gradient(position)
+    
+## Input arguments
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("length", help="name of input txt file")
+    parser.add_argument("number", help="length of a single timestep")
+    parser.add_argument("temperature", help="numer of time steps")
+    return parser.parse_args()
 
-def out_string(position,velocity):
-    output = np.empty([len(position), 6])
-    trjct = ""
-    for i in range(len(position)):
-        for j in range(0,3) :
-            output[i,j] = position[i,j]
-            output[i,j+3] = velocity[i,j]
-    for line in output:
-        for elem in line:
-            trjct += str(elem) + " "
-        trjct += "\n"
-    return trjct
-
-def save_to_file(position,velocity):
-
-    with open("input.txt","w") as file:
-        file.write(str(M[0]) + '\n')
-        file.write("-" + '\n')
-        file.write(str(L) + '\n')
-        file.write(out_string(position,velocity))       
-        
 np.random.seed(800)
-L = 2 #int(input())
-M = (15,) #int(input())
-T = 300 #int(input())
-particles = particle_cloud(M[0], L, T)
+
+# args = parse_arguments()
+args = False
+
+if args:
+    L = float(args.length)
+    M = int(args.number)
+    T = float(args.temperature)
+else:
+    L = 2 #int(input())
+    M = 100 #int(input())
+    T = 300 #int(input())
+
+
+config = (L,M)
+
+print(f"values: L = {L}, M = {M}, T = {T}")
+
+particles = particle_cloud(L, M, T)
 coords = particles.get_array()
 
 #k = scipy.constants.physical_constants["Boltzmann constant in eV/K"][0]
+#coordinates = npj.array(coords)#
+coordinates = np.array(coords).flatten()
+
+options = {
+    'gtol': 1e-4,
+    'disp': True,
+    'maxiter': 3,
+    'return_all': True
+    }
+
+print('start minimizing')
+res = minimize(
+    E_potential,
+    coordinates,
+#    args = config,
+    method = "CG",
+    jac = energy_gradient,
+    options = options
+    )
+
+pos_input = np.array(res.x).reshape(M[0], 3)
+
+##### velocity
 k = 3.166811429 * (10 ** -6)
 varr = np.sqrt((k*T)/18.998403)
 
@@ -78,31 +115,23 @@ velssss = vels - vels.mean(axis=0, keepdims=True)
 #print([ sum(row[i] for row in velssss) for i in range(len(velssss[0])) ])
 
 velssss = np.array(velssss)
+vel_input = np.array([vel for [vel] in velssss])
 
-#coordinates = npj.array(coords)#
-coordinates = np.array(coords).flatten()
+print('start writing input.txt')
+save_to_file(pos_input, vel_input)
 
-options = {
-    'gtol': 1e-7,
-    'disp': True,
-    'return_all': True
-    }
-res = minimize(
-    E_potential,
-    coordinates,
-    method = "CG",
-    jac = acceleration,
-#    jac = acceleration,
-    options = options
-    )
 
-new_coords = np.array(res.x).reshape(M[0], 3)
 
-vel_output = np.array([vel for [vel] in velssss])
-
-save_to_file(new_coords, vel_output)
 #%%
 print("DONE")
+
+
+
+
+#%%
+
+print(new_coords)
+print(vel_output)
 #%%
 print(res)
 #%%

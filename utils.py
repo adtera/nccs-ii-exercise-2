@@ -8,22 +8,16 @@ import jax.numpy as npj
 import argparse
 
 class particle_cloud:
-    def __init__(self, M, L, T):
-        self._number_of_particles = M
+    def __init__(self, L, M, T):
         self._length_of_box = L
+        self._number_of_particles = M
         self._temperature = T
-        self._shape = np.array([L, L, L])
 
         self._perfect_particles_1d = self.perfect_particles_1d(self._number_of_particles)
         self._perfect_number_of_particles = self.perfect_cube(self._perfect_particles_1d)
-
         self._ghost_particles = self._perfect_number_of_particles - self._number_of_particles
-
         self._particle_box_length = (self._length_of_box / (self._perfect_particles_1d + 1)) / 2
-
-
         self._axis_1d = self.linspace_axis_1d()
-
 
     def perfect_particles_1d(self, N):
         return int(np.floor(N ** (1/3)) + 1)
@@ -53,18 +47,17 @@ class particle_cloud:
                 arr[i][j] += shift
         return arr    
 
-    def minimize_energy(self):
-        minimize()
 
-
-    
-        
-def E_potential(position, M):
-#    position = position.reshape((M, 3))
+def E_potential(position, *args):
+    #not working
+    print(args)
+    L=args[0]
+    M=args[1]
     position = np.reshape(position,(M,3))
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
+    delta = delta - L * npj.round(delta/L)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
     D_e = 1.6
@@ -74,40 +67,14 @@ def E_potential(position, M):
     E_pot = sum(V_Morse)
     return E_pot
 
-# Acceleration
-def acceleration(position, M = 10):
+def energy_gradient(position, L, M):
+    #not working
     morse_gradient = jax.jit(jax.grad(E_potential))
-    forces = - morse_gradient(position)
-    #accel = forces/m
-    #return accel
+    args = (L,M)
+    forces = morse_gradient(position, args)
     return np.array(forces)
 
-# Velocity
-def new_velocity(acceleration, acceleration_old,time_step, velocity_old):
-    velocity = velocities + acceleration_old + (acceleration_old+acceleration)/2*delta_t
-    return velocity
-
-# Position
-def new_positions(acceleration, velocity, time_step, position):
-    new_position = position + velocity * time_step + 1/2*acceleration*time_step*time_step
-    return new_position
-
-# Periodic boundary conditions
-def BC(position):
-    for i in range(len(position)):
-        for j in range(0,3) :
-            if position[i,j] > side_length:
-                mod = position[i,j] // side_length
-                position = position.at[i,j].add(-mod * side_length)
-            if position[i,j] < 0:
-                mod = 1 + (abs(position[i,j]) // side_length)
-                position = position.at[i,j].add(mod * side_length)
-            else:
-                pass
-    return position
-
-# Generate output
-def Out(position,velocity):
+def out_string(position,velocity):
     output = np.empty([len(position), 6])
     trjct = ""
     for i in range(len(position)):
@@ -119,3 +86,10 @@ def Out(position,velocity):
             trjct += str(elem) + " "
         trjct += "\n"
     return trjct
+
+def save_to_file(position,velocity):
+    with open("input.txt","w") as file:
+        file.write(str(M[0]) + '\n')
+        file.write("-" + '\n')
+        file.write(str(L) + '\n')
+        file.write(out_string(position,velocity))     
