@@ -74,6 +74,14 @@ def energy_gradient(position, L, M):
     forces = morse_gradient(position, args)
     return np.array(forces)
 
+def energy_gradient(position):
+    #not workin. defining function with position doesnt make sense
+    print('--- Start function: energy_gradient')
+    morse_gradient = jax.jit(jax.grad(E_potential))
+    print('--- Exit function: energy_gradient')
+    return morse_gradient(position)
+
+
 def out_string(position,velocity):
     output = np.empty([len(position), 6])
     trjct = ""
