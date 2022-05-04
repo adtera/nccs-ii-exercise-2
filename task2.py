@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from utils import particle_cloud, save_to_file
+from utils import particle_cloud, save_to_file, BC
 import argparse
 import jax
 import jax.numpy as npj
@@ -10,7 +10,6 @@ import jax.numpy as npj
 
 print('=== DEFINING FUNCTIONS')
 def E_potential(position):
-    print('--- Start function: E_potential')
     position = np.reshape(position,(M,3))    
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
@@ -21,11 +20,8 @@ def E_potential(position):
     D_e = 1.6
     Alpha = 3.028
     r_e = 1.411
-    print('calculating V_Morse')
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
     E_pot = V_Morse.sum()
-    #E_pot = sum(V_Morse)
-    print('--- Exit function: E_potential')
     return E_pot
 
 ## Input arguments
@@ -46,8 +42,8 @@ if args:
     M = int(args.number)
     T = float(args.temperature)
 else:
-    L = 15 #int(input())
-    M = 1000 #int(input())
+    L = 2 #int(input())
+    M = 100 #int(input())
     T = 300 #int(input())
 
 config = (L,M)
@@ -81,7 +77,6 @@ res = minimize(
     )
 print('=== EXIT SCIPY.OPTIMIZE.MINIMIZE')
 
-
 pos_input = np.array(res.x).reshape(M, 3)
 
 ##### velocity
@@ -101,8 +96,9 @@ vels_0 = vels - vels.mean(axis=0, keepdims=True)
 vels_0 = np.array(vels_0)
 vel_input = np.array([vel for [vel] in vels_0])
 
+
 print('start writing input.txt')
-save_to_file(pos_input, vel_input)
+save_to_file(BC(pos_input,L), vel_input, M, L)
 print("DONE")
 #%%
 
@@ -117,7 +113,7 @@ print(E_potential(pos_input))
 #print(np.array(new_coords))
 
 #%%
-x,y,z = zip(*coords)
+x,y,z = zip(*particles.get_array())
 fig = plt.figure(figsize = (15,15))
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(x, y, z)
@@ -127,7 +123,7 @@ ax.set_zlim(0,L)
 plt.show()
 
 #%%
-x,y,z = zip(*new_coords.tolist())
+x,y,z = zip(*BC(pos_input,L).tolist())
 fig = plt.figure(figsize = (15,15))
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(x, y, z)

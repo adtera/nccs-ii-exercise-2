@@ -55,7 +55,7 @@ def E_potential(position):
     Alpha = 3.028
     r_e = 1.411
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
-    E_pot = sum(V_Morse)
+    E_pot = V_Morse.sum()
     return E_pot
 
 # Acceleration
