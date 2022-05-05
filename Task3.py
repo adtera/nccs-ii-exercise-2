@@ -17,8 +17,8 @@ args = parser.parse_args()
 
 # Given values
 m = 18.998403 #atomic mass units
+delta_t = float(args.timestep) #Time step length in 'atomic time units' or 0.0241885 fs
 N = int(args.steps) #Number of time steps
-delta_t = float(args.timestep) #Time step length
 
 ## Read input file
 
@@ -38,20 +38,20 @@ with open(args.input) as f:
 coordinates = npj.array(init_coord)
 velocities = npj.array(init_vel)
 
-print(coordinates)
+#print(coordinates)
 ##########################################################################################
-#%%      
 ##Define functions
 
 # Morse potential
 def E_potential(position):
-    print(position)
+    # print(position)
     delta = position[:, npj.newaxis, :] - position
     indices = npj.triu_indices(position.shape[0], k=1)
     delta = delta[indices[0], indices[1], :]
+    delta = delta - side_length * npj.round(delta/side_length)
     r2 = (delta * delta).sum(axis=1)
     r = npj.sqrt(r2)
-    D_e = 1.6
+    D_e = 0.0587989 #in 0.0587989 E_H = 1.6 eV
     Alpha = 3.028
     r_e = 1.411
     V_Morse = D_e * (npj.exp(-2*Alpha*(r-r_e))-2*npj.exp(-Alpha*(r-r_e)))
@@ -59,20 +59,20 @@ def E_potential(position):
     return E_pot
 
 # Acceleration
-def acceleration (position):
+def get_acceleration (position):
     morse_gradient = jax.jit(jax.grad(E_potential))
     forces = - morse_gradient(position)
     accel = forces/m
     return accel
 
 # Velocity
-def new_velocity(acceleration, acceleration_old,time_step, velocity_old):
-    velocity = velocities + acceleration_old + (acceleration_old+acceleration)/2*delta_t
+def get_velocity(acceleration, acceleration_old,time_step, velocity_old):
+    velocity = velocity_old + ((acceleration_old+acceleration)/2)*time_step
     return velocity
 
 # Position
-def new_positions(acceleration, velocity, time_step, position):
-    new_position = position + velocity * time_step + 1/2*acceleration*time_step*time_step
+def get_positions(acceleration, velocity, time_step, position):
+    new_position = position + velocity * time_step + (1/2)*acceleration*time_step*time_step
     return new_position
 
 # Periodic boundary conditions
@@ -113,24 +113,30 @@ file.write(str(N_of_Atoms) + "\n" + "Task3 output" + "\n" + str(side_length)+ "\
 file.close()
 
 # First step
-oldacceleration = acceleration (coordinates)                                                            #needed only for the first step
+acceleration = get_acceleration(coordinates)                                                            #needed only for the first step
+
+get_positions_jit = jax.jit(get_positions)
+get_acceleration_jit = jax.jit(get_acceleration)
+get_velocity_jit = jax.jit(get_velocity)
 
 #Loop over steps
-for i in range(0,N):    
-    newcoordinates = BC(new_positions(oldacceleration,velocities,delta_t,coordinates))
-    newacceleration = acceleration (newcoordinates)
-    newvelocity = new_velocity(newacceleration, oldacceleration,delta_t, velocities)
+for i in range(0,N):  
+    print(f'TIMESTEP: {i}')
+    new_coordinates = BC(get_positions_jit(acceleration,velocities,delta_t,coordinates))
+#    new_coordinates = get_positions(acceleration,velocities,delta_t,coordinates)
+    new_acceleration = get_acceleration_jit(new_coordinates)
+    new_velocity = get_velocity_jit(new_acceleration, acceleration,delta_t, velocities)
 
     # Write some outputs into txt file                                                                  #to be adapted for bigger N
     if i%2 == 0:
         file = open("trajectory.txt", "a")
-        content = Out(newcoordinates,newvelocity)
+        content = Out(new_coordinates,new_velocity)
         file.write(content)
         
 
-    coordinates = newcoordinates
-    velocities = newvelocity
-    oldacceleration = newacceleration
+    coordinates = new_coordinates
+    velocities = new_velocity
+    acceleration = new_acceleration
 
     # Close output txt file
     file.close()

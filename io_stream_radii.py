@@ -75,42 +75,6 @@ def slice_at_nth(lines,n):
     return sliced_list
 
 
-def calculate_energies(xyz,side_length):
-    # Define periodic BC
-    def BC(position):
-        for i in range(len(position)):
-            for j in range(0,3) :
-                if position[i,j] > side_length:
-                    mod = position[i,j] // side_length
-                    #position = position.at[i,j].add(-mod * side_length)
-                    np.add.at(position,[i,j],-mod * side_length)
-                if position[i,j] < 0:
-                    mod = 1 + (abs(position[i,j]) // side_length)
-                    #position = position.at[i,j].add(mod * side_length)
-                    np.add.at(position,[i,j],mod * side_length)
-                else:
-                    pass
-        return position
-    # Calc Energies for each timestep
-    energies = []
-    for t,timestep_config in enumerate(xyz):
-        whole_config_timestep = np.zeros(6)
-        for atom in timestep_config:
-            sp = atom.split()
-            each_atom = [float(a) for a in sp]
-            #print(each_atom)
-            whole_config_timestep = np.vstack((whole_config_timestep,[each_atom]))
-        whole_config_timestep = whole_config_timestep[1:]
-        print(whole_config_timestep)
-        
-        #Apply BC
-        whole_config_timestep = BC(whole_config_timestep)
-        ekin = calc_Ekin(whole_config_timestep)
-        print(f'Ekin at timestep {t} is : {ekin}')
-        epot = calc_Epot(whole_config_timestep)
-        print(f'Epot at timestep {t} is : {epot}')
-        energies.append((epot,ekin))
-    return energies
 
 
 
@@ -125,14 +89,14 @@ L = float(text[2])
 configuration = slice_at_nth(text[3:],M)
 
 # Calculate Energies
-energies = calculate_energies(configuration,L)
+##energies = calculate_energies(configuration,L)#
 
 
-with open('./energies.txt','w') as out_file:
-    out_file.write("  ".join(["Epot","EKin"])+"\n")
-    for line in energies:
-        out_file.write("   ".join([str(line[0]),str(line[1])])+'\n')
-#        out_file.write("   ".join([str(line[0]),str(line[1]), str(float(line[0]) + float(line[1]))])+'\n') # debug
+#with open('./energies.txt','w') as out_file:
+#    out_file.write("  ".join(["Epot","EKin"])+"\n")
+#    for line in energies:
+#        out_file.write("   ".join([str(line[0]),str(line[1])])+'\n')
+##        out_file.write("   ".join([str(line[0]),str(line[1]), str(float(line[0]) + float(line[1]))])+'\n') # debug
 
 
 # Define function calculating atomic distances bigger than threshold radius and weigh over time 
@@ -183,11 +147,9 @@ def calculate_distances_within_treshold_radius(configurations,r,side_length):
 # Radii are at equally spaced regular intervals between 0 and L/2
 n_intervals = 10
 rs = np.linspace(L/(2*n_intervals),L/2,n_intervals)
-rs
 
 # Use only timesteps after the first 25% of them
 t_25 = math.ceil(len(configuration)*0.25)
-t_25
 configuration_timesteps_75 = configuration[t_25:]
 n_timestpe_75 = len(configuration_timesteps_75)
 
@@ -199,40 +161,3 @@ with open('./ratio_distances_within_radii.txt','w') as out_file:
         out_file.write("   ".join([str(r),str(ratio)])+'\n')
         
 
-# Plot EKin over time and discuss
-kB = 3.167 * 10 **(-6)
-time = []
-ekin_over_time = []
-epot_over_time = []
-e_total = []
-for t,energy in enumerate(energies):
-    print(energy)
-    ekin = float(energy[1])
-    epot = float(energy[0])
-    ekin_over_time.append(ekin/(M*kB*3/2))
-    epot_over_time.append(epot)
-    e_total.append(ekin + epot)
-    time.append(t)
-ekin_over_time
-fig = plt.figure()
-plt.plot(ekin_over_time)
-fig.suptitle("Evolution of Kinetic Temperature")
-plt.xlabel("Time/fs")
-plt.ylabel("Ekin/(M*kB*3/2)")
-plt.show()
-
-
-fig = plt.figure()
-plt.plot(epot_over_time)
-fig.suptitle("Evolution of Potential Energy")
-plt.xlabel("Time/fs")
-plt.ylabel("Epot")
-plt.show()
-
-
-fig = plt.figure()
-plt.plot(e_total)
-fig.suptitle("Evolution of Total Energy")
-plt.xlabel("Time/fs")
-plt.ylabel("E_total")
-plt.show()

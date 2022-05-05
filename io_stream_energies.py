@@ -135,69 +135,7 @@ with open('./energies.txt','w') as out_file:
 #        out_file.write("   ".join([str(line[0]),str(line[1]), str(float(line[0]) + float(line[1]))])+'\n') # debug
 
 
-# Define function calculating atomic distances bigger than threshold radius and weigh over time 
-def calculate_distances_within_treshold_radius(configurations,r,side_length):
-    # Define periodic BC
-    def BC(position):
-        for i in range(len(position)):
-            for j in range(0,3) :
-                if position[i,j] > side_length:
-                    mod = position[i,j] // side_length
-                    #position = position.at[i,j].add(-mod * side_length)
-                    np.add.at(position,[i,j],-mod * side_length)
-                if position[i,j] < 0:
-                    mod = 1 + (abs(position[i,j]) // side_length)
-                    #position = position.at[i,j].add(mod * side_length)
-                    np.add.at(position,[i,j],mod * side_length)
-                else:
-                    pass
-        return position
-    
-    # Calculate distances bigger than threshold radius ri
-    distances_within_ri_all_timesteps = 0
-    for t,timestep_config in enumerate(configurations):
-        whole_config_timestep = np.zeros(6)
-        for atom in timestep_config:
-            sp = atom.split()
-            each_atom = [float(a) for a in sp]
-            #print(each_atom)
-            whole_config_timestep = np.vstack((whole_config_timestep,[each_atom]))
-        whole_config_timestep = whole_config_timestep[1:]
-        # Apply BC
-        whole_config_timestep = BC(whole_config_timestep)
-        #print(whole_config_timestep)
-        # calculate all distances
-        distances = calc_distances(whole_config_timestep)
-        #print(distances)
-        # count distances bigger than threshold distanc ri
-        count_d_smaller_ri = sum(map(lambda x: x < r,distances))
-        #print(count_d_bigger_ri)
-        fraction_of_distances_within_ri =  count_d_smaller_ri/len(distances)
-        #print(fraction_of_distances_bigger_ri)
-        distances_within_ri_all_timesteps += fraction_of_distances_within_ri
 
-    # Weigh sum of distances within ri over timesteps
-    d_within_ri_weighted_over_time = distances_within_ri_all_timesteps/len(configurations)
-    return d_within_ri_weighted_over_time
-
-# Radii are at equally spaced regular intervals between 0 and L/2
-n_intervals = 10
-rs = np.linspace(L/(2*n_intervals),L/2,n_intervals)
-rs
-
-# Use only timesteps after the first 25% of them
-t_25 = math.ceil(len(configuration)*0.25)
-t_25
-configuration_timesteps_75 = configuration[t_25:]
-n_timestpe_75 = len(configuration_timesteps_75)
-
-# Write distances of radii smaller than treshold radius ri to outfile
-with open('./ratio_distances_within_radii.txt','w') as out_file:
-    out_file.write("  ".join(["Threshold radii ","Fraction of distances within radius over time"])+"\n")
-    for r in rs:
-        ratio = calculate_distances_within_treshold_radius(configuration_timesteps_75,r,L)
-        out_file.write("   ".join([str(r),str(ratio)])+'\n')
-        
 
 # Plot EKin over time and discuss
 kB = 3.167 * 10 **(-6)

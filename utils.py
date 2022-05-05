@@ -113,4 +113,14 @@ def save_to_file(position,velocity, M, L):
         file.write(str(M) + '\n')
         file.write("-" + '\n')
         file.write(str(L) + '\n')
-        file.write(out_string(position,velocity))     
+        file.write(out_string(position,velocity))
+
+def plot_3d(particles, L):
+    x,y,z = zip(*particles)
+    fig = plt.figure(figsize = (15,15))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(x, y, z)
+    ax.set_xlim(0,L)
+    ax.set_ylim(0,L)
+    ax.set_zlim(0,L)
+    plt.show()
