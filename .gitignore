@@ -1,3 +1,4 @@
-**/md
+**/molecular_dynamics
 **/.vscode
 **/__pycache__
+trajectory.txt

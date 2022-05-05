@@ -6,6 +6,9 @@ from matplotlib import pyplot as plt
 import sys
 import math
 import argparse
+import jax
+import jax.numpy as npj
+
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Optional app description')
 parser.add_argument('pos_arg', type=str,
@@ -40,27 +43,15 @@ def calc_distances(configuration):
 def calc_Epot(configuration):
     distances = calc_distances(configuration)
     #len(distances)
-
-    # might be faster: E_pot = v_morse(distances).sum()
-
-    E_pot = 0
-    for d in distances:
-        E_pot += v_morse(d)
-    return E_pot
-
+    return v_morse(distances).sum()
+    
 # Calculate Kinetic Energy
 def calc_Ekin(configuration):
     #m_e = 0.2
     m_e = 18.998403 #debug ?
     velocities = configuration[:,3:]
-    velocities_split = np.array_split(velocities,M)
-    E_kin = 0
-    for v in velocities_split:
-        v_abs_square = np.linalg.norm(v) ** 2 
-        E_kin += v_abs_square
-    E_kin *= (m_e/2)
-    
-    return E_kin
+    velocities_squared = np.square(velocities)    
+    return velocities_squared.sum() * (m_e/2)
 
 # Calculate EKin and EPot for every timestep and write to list containing of tuples (epot,ekin)
  # Helper Function to slice input lines at at every nth element. E.g. len(lines) = 15 and n = 5, then we get 3 splits 
@@ -76,21 +67,6 @@ def slice_at_nth(lines,n):
 
 
 def calculate_energies(xyz,side_length):
-    # Define periodic BC
-    def BC(position):
-        for i in range(len(position)):
-            for j in range(0,3) :
-                if position[i,j] > side_length:
-                    mod = position[i,j] // side_length
-                    #position = position.at[i,j].add(-mod * side_length)
-                    np.add.at(position,[i,j],-mod * side_length)
-                if position[i,j] < 0:
-                    mod = 1 + (abs(position[i,j]) // side_length)
-                    #position = position.at[i,j].add(mod * side_length)
-                    np.add.at(position,[i,j],mod * side_length)
-                else:
-                    pass
-        return position
     # Calc Energies for each timestep
     energies = []
     for t,timestep_config in enumerate(xyz):
@@ -104,7 +80,7 @@ def calculate_energies(xyz,side_length):
         print(whole_config_timestep)
         
         #Apply BC
-        whole_config_timestep = BC(whole_config_timestep)
+        whole_config_timestep = whole_config_timestep
         ekin = calc_Ekin(whole_config_timestep)
         print(f'Ekin at timestep {t} is : {ekin}')
         epot = calc_Epot(whole_config_timestep)
@@ -125,8 +101,9 @@ L = float(text[2])
 configuration = slice_at_nth(text[3:],M)
 
 # Calculate Energies
+#calculate_energies_jit = jax.jit(calculate_energies)
+#energies = calculate_energies_jit(npj.array(configuration),L)
 energies = calculate_energies(configuration,L)
-
 
 with open('./energies.txt','w') as out_file:
     out_file.write("  ".join(["Epot","EKin"])+"\n")
@@ -157,7 +134,8 @@ plt.plot(ekin_over_time)
 fig.suptitle("Evolution of Kinetic Temperature")
 plt.xlabel("Time/fs")
 plt.ylabel("Ekin/(M*kB*3/2)")
-plt.show()
+#plt.show()
+plt.savefig("kinetic_temperature")
 
 
 fig = plt.figure()
@@ -165,7 +143,9 @@ plt.plot(epot_over_time)
 fig.suptitle("Evolution of Potential Energy")
 plt.xlabel("Time/fs")
 plt.ylabel("Epot")
-plt.show()
+#plt.show()
+plt.savefig("potential_energy")
+
 
 
 fig = plt.figure()
@@ -173,4 +153,6 @@ plt.plot(e_total)
 fig.suptitle("Evolution of Total Energy")
 plt.xlabel("Time/fs")
 plt.ylabel("E_total")
-plt.show()
+#plt.show()
+plt.savefig("total_energy")
+

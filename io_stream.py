@@ -40,9 +40,7 @@ def calc_distances(configuration):
 def calc_Epot(configuration):
     distances = calc_distances(configuration)
     #len(distances)
-
     # might be faster: E_pot = v_morse(distances).sum()
-
     E_pot = 0
     for d in distances:
         E_pot += v_morse(d)
@@ -101,7 +99,7 @@ def calculate_energies(xyz,side_length):
             #print(each_atom)
             whole_config_timestep = np.vstack((whole_config_timestep,[each_atom]))
         whole_config_timestep = whole_config_timestep[1:]
-        print(whole_config_timestep)
+        #print(whole_config_timestep)
         
         #Apply BC
         whole_config_timestep = BC(whole_config_timestep)
@@ -116,13 +114,15 @@ def calculate_energies(xyz,side_length):
 
 # Import trajectory file
 with open(args.pos_arg) as f:
-    text = f.readlines()
+#    text = f.readlines()
+    text = f.read().splitlines() #armin
 # Get number of atoms s
 M = int(text[0])
 # Get length of box
 L = float(text[2])
 # Get atom positions and velocitities for every timestep seperately
-configuration = slice_at_nth(text[3:],M)
+
+configuration = slice_at_nth(text[3:],M)[0]
 
 # Calculate Energies
 energies = calculate_energies(configuration,L)

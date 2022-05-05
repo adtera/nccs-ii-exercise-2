@@ -122,13 +122,13 @@ get_velocity_jit = jax.jit(get_velocity)
 #Loop over steps
 for i in range(0,N):  
     print(f'TIMESTEP: {i}')
-    new_coordinates = BC(get_positions_jit(acceleration,velocities,delta_t,coordinates))
-#    new_coordinates = get_positions(acceleration,velocities,delta_t,coordinates)
+#    new_coordinates = BC(get_positions_jit(acceleration,velocities,delta_t,coordinates))
+    new_coordinates = get_positions(acceleration,velocities,delta_t,coordinates)
     new_acceleration = get_acceleration_jit(new_coordinates)
     new_velocity = get_velocity_jit(new_acceleration, acceleration,delta_t, velocities)
 
     # Write some outputs into txt file                                                                  #to be adapted for bigger N
-    if i%2 == 0:
+    if (i+1)%1000 == 0 or i == 0:
         file = open("trajectory.txt", "a")
         content = Out(new_coordinates,new_velocity)
         file.write(content)
